@@ -13,6 +13,7 @@ in pkgs.mkShell {
       python-pkgs.soupsieve
       python-pkgs.urllib3
       python-pkgs.cryptography
+      python-pkgs.psutil
     ]))
   ];
 }

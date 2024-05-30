@@ -1,53 +1,62 @@
 import os
 import time
+import psutil
 import subprocess
 
 
 def download_and_stream(magnet_link, save_path='downloads'):
-    global wait_time
-    
-    # Ensure the save path exists
     os.makedirs(save_path, exist_ok=True)
 
-    # Download and stream the torrent using webtorrent
-    command = f'webtorrent "{magnet_link}" --out "{save_path}" --vlc'
-    process = subprocess.Popen(command, shell=True)
+    while True:
+        # Define the webtorrent command
+        command = f'webtorrent download "{magnet_link}" --out "{save_path}" --quiet'
 
-    # Check speed after some time (adjust wait time as needed)
-    wait_time = 5  # Wait 5 seconds before checking speed
-    time.sleep(wait_time)
+        # Start the webtorrent process
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    download_speed = get_download_speed(process)
-    
-    # Define minimum acceptable speed (adjust as needed)
-    min_speed = 1024 * 1024  # 1 MB/s
+        # Check speed before starting the download
+        wait_time = 10  # Wait time in seconds
+        download_speed = get_download_speed(process, wait_time)
 
-    if download_speed < min_speed:
-        print(f"Download speed is too slow ({download_speed} bytes/s). Try another torrent?")
-        choice = input("Enter y to choose another torrent, or any other key to continue: ")
-        if choice.lower() == 'y':
-            process.terminate()  # Stop the slow download
-            return  # Exit the function to prompt for another torrent
+        # Define minimum acceptable speed (adjust as needed)
+        min_speed = 1024 * 1024  # 1 MB/s
 
-    # Wait for the webtorrent process to complete
-    process.communicate()
+        if download_speed < min_speed:
+            print(f"Download speed is too slow ({download_speed / 1024:.2f} KB/s).")
+            choice = input("Enter 'y' to choose another torrent, or any other key to continue with the current torrent: ")
+            if choice.lower() == 'y':
+                process.terminate()
+                return
+            else:
+                break
+        else:
+            break
+
+    print(f"Initial speed: {download_speed / 1024:.2f} KB/s")
+
+    # If the speed is acceptable, start streaming with VLC
+    stream_command = f'webtorrent download "{magnet_link}" --out "{save_path}" --vlc'
+    stream_process = subprocess.Popen(stream_command, shell=True)
+    stream_process.communicate()
 
 
-def get_download_speed(process):
-    # Get process connections
-    connections = process.connections()
-    
-    # Filter TCP connections for download direction
-    download_connections = [conn for conn in connections if conn.status == 'ESTABLISHED' and conn.laddr.port != process.connections()[0].laddr.port]
-    
-    # Get total bytes sent by all download connections
-    total_sent = sum(conn.bytes_sent for conn in download_connections)
-    
-    # Return download speed in bytes/second
-    return total_sent / wait_time
+def get_download_speed(process, wait_time):
+    start_time = time.time()
+    initial_bytes = psutil.net_io_counters().bytes_recv
+
+    while time.time() - start_time < wait_time:
+        time.sleep(1)
+
+    final_bytes = psutil.net_io_counters().bytes_recv
+    total_bytes = final_bytes - initial_bytes
+
+    # Calculate the download speed in bytes/second
+    download_speed = total_bytes / wait_time
+
+    return download_speed
 
 
 if __name__ == "__main__":
-    print("You are not suppose to run this module individually")
+    print("You are not supposed to run this module individually")
     magnet_link = input("Enter the magnet link: ")
     download_and_stream(magnet_link)
