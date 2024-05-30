@@ -20,27 +20,38 @@ def main():
     # Ask user for episode number
     episode_number = input("Enter the episode number to download: ")
     
-    # Search for torrents
-    torrents = torrent_search.search_torrents(title, episode_number)
-    if not torrents:
-        print("No torrents found.")
-        return
-    
-    print("Available torrents:")
-    for i, torrent in enumerate(torrents):
-        print(f"{i + 1}. {torrent['title']}")
+    while True:
+        # Search for torrents
+        torrents = torrent_search.search_torrents(title, episode_number)
+        if not torrents:
+            print("No torrents found.")
+            return
 
-    # Ask user to select a torrent
-    choice = int(input("Enter the number of the torrent to download: ")) - 1
-    if choice < 0 or choice >= len(torrents):
-        print("Invalid choice.")
-        return
+        # Display available torrents
+        print("Available torrents:")
+        for i, torrent in enumerate(torrents):
+            print(f"{i + 1}. {torrent['title']}")
 
-    magnet_link = torrents[choice]['magnet_link']
-    print(f"Selected torrent: {torrents[choice]['title']}")
-    
-    # Download and stream the torrent
-    torrent_manager.download_and_stream(magnet_link)
+        # Ask user to select a torrent
+        choice = input("Enter the number of the torrent to download: ")
+        if not choice.isdigit():
+            print("Invalid choice. Please enter a number.")
+            continue
+
+        choice = int(choice)
+        if choice < 1 or choice > len(torrents):
+            print("Invalid choice. Please enter a valid number.")
+            continue
+
+        selected_torrent = torrents[choice - 1]
+        print(f"Selected torrent: {selected_torrent['title']}")
+
+        # Download and stream the selected torrent
+        success = torrent_manager.download_and_stream(selected_torrent['magnet_link'])
+        if success:
+            break
+        else:
+            print("Please select another torrent.")
 
 
 if __name__ == "__main__":
