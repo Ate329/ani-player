@@ -5,7 +5,6 @@ ani-player is a Python script that allows users to search for and download anime
 
 - Search for anime titles and episodes using AniList API integration.
 - Display available torrents for selected episodes from Nyaa.si.
-- Check the initial download speed of torrents before downloading.
 - Download and stream (VLC) selected torrents using webtorrent-cli.
 
 ## Requirements
