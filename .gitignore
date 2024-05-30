@@ -1,0 +1,9 @@
+.venv/
+temp/
+test/
+downloads/
+lib/__pycache__/
+lib/encrypt.py
+lib/anilist_auth.py
+token.json
+shell.nix
