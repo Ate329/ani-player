@@ -6,7 +6,6 @@ in pkgs.mkShell {
     (pkgs.python311.withPackages (python-pkgs: [
       python-pkgs.requests
       python-pkgs.beautifulsoup4
-      # python-pkgs.bs4
       python-pkgs.certifi
       python-pkgs.charset-normalizer
       python-pkgs.idna
